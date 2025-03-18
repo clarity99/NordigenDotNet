@@ -11,6 +11,7 @@ using JetBrains.Annotations;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 using VMelnalksnis.NordigenDotNet.Accounts;
@@ -63,7 +64,8 @@ public static class ServiceCollectionExtensions
 			{
 				var httpClient = provider.GetRequiredService<IHttpClientFactory>().CreateClient(NordigenOptions.SectionName);
 				var options = provider.GetRequiredService<NordigenJsonSerializerOptions>();
-				return new(httpClient, options);
+				var logger = provider.GetRequiredService<ILogger<AccountClient>>();
+				return new(httpClient, options, logger);
 			})
 			.AddTransient<IAgreementClient, AgreementClient>(provider =>
 			{

@@ -4,7 +4,7 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-
+using Microsoft.Extensions.Logging;
 using NodaTime;
 
 using VMelnalksnis.NordigenDotNet.Serialization;
@@ -16,14 +16,17 @@ public sealed class AccountClient : IAccountClient
 {
 	private readonly HttpClient _httpClient;
 	private readonly NordigenSerializationContext _context;
+	private readonly ILogger<AccountClient> _logger;
 
 	/// <summary>Initializes a new instance of the <see cref="AccountClient"/> class.</summary>
 	/// <param name="httpClient">Http client configured for making requests to the Nordigen API.</param>
 	/// <param name="serializerOptions">Nordigen specific instance of <see cref="JsonSerializerOptions"/>.</param>
-	public AccountClient(HttpClient httpClient, NordigenJsonSerializerOptions serializerOptions)
+	public AccountClient(HttpClient httpClient, NordigenJsonSerializerOptions serializerOptions,
+		ILogger<AccountClient> logger)
 	{
 		_httpClient = httpClient;
 		_context = serializerOptions.Context;
+		_logger = logger;
 	}
 
 	/// <inheritdoc />
@@ -58,10 +61,11 @@ public sealed class AccountClient : IAccountClient
 		Interval? interval = null,
 		CancellationToken cancellationToken = default)
 	{
-		var transactions = await _httpClient
-			.Get(Routes.Accounts.TransactionsUri(id, interval), _context.TransactionsWrapper, cancellationToken)
-			.ConfigureAwait(false);
+		var response = await _httpClient.GetAsync(Routes.Accounts.TransactionsUri(id, interval), cancellationToken);
+		var jsonString = await response.Content.ReadAsStringAsync();
+		_logger.LogInformation("Received transactions JSON: {Json}", jsonString);
 
+		var transactions = JsonSerializer.Deserialize(jsonString, _context.TransactionsWrapper);
 		return transactions!.Transactions;
 	}
 }
