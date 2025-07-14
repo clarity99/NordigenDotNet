@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
@@ -62,10 +63,22 @@ public sealed class AccountClient : IAccountClient
 		CancellationToken cancellationToken = default)
 	{
 		var response = await _httpClient.GetAsync(Routes.Accounts.TransactionsUri(id, interval), cancellationToken);
-		var jsonString = await response.Content.ReadAsStringAsync();
+		var jsonString = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 		_logger.LogInformation("Received transactions JSON: {Json}", jsonString);
-
+		await response.ThrowIfNotSuccessful().ConfigureAwait(false);
 		var transactions = JsonSerializer.Deserialize(jsonString, _context.TransactionsWrapper);
+		// if (transactions.Transactions == null && id == Guid.Parse("91c5a418-156e-451a-87f7-a30b50552aac"))
+		// 	transactions = JsonSerializer.Deserialize(ReturnTestJSON(), _context.TransactionsWrapper);
+		if (transactions?.Transactions == null)
+		{
+			throw new Exception("Empty transactions: error json" + jsonString);
+		}
+		
 		return transactions!.Transactions;
+	}
+
+	private string ReturnTestJSON()
+	{
+		return File.ReadAllText("/Users/robertivanc/src/robrezervacije/n26.json");
 	}
 }
