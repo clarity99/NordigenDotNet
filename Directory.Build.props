@@ -1,11 +1,11 @@
 <Project>
 	<PropertyGroup>
-		<TargetFrameworks>netstandard2.0;net6.0;net8.0</TargetFrameworks>
+		<TargetFrameworks Condition="'$(PublishTrimmed)' == 'true'">net6.0;net8.0</TargetFrameworks>
+		<TargetFrameworks Condition="'$(PublishTrimmed)' != 'true'">netstandard2.0;net6.0;net8.0</TargetFrameworks>
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<DebugType>portable</DebugType>
-		<IsTrimmable>true</IsTrimmable>
 		<NoWarn>$(NoWarn); SA1633</NoWarn>
 
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
@@ -25,7 +25,16 @@
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(TargetFramework)' == 'net8.0'">
+		<IsTrimmable>true</IsTrimmable>
 		<IsAotCompatible>true</IsAotCompatible>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(TargetFramework)' == 'net6.0'">
+		<IsTrimmable>true</IsTrimmable>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+		<IsTrimmable>false</IsTrimmable>
 	</PropertyGroup>
 
 	<ItemGroup>
