@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Microsoft.Extensions.Logging;
 using NodaTime;
-
 using VMelnalksnis.NordigenDotNet.Serialization;
 
 namespace VMelnalksnis.NordigenDotNet.Accounts;
@@ -22,7 +21,10 @@ public sealed class AccountClient : IAccountClient
 	/// <summary>Initializes a new instance of the <see cref="AccountClient"/> class.</summary>
 	/// <param name="httpClient">Http client configured for making requests to the Nordigen API.</param>
 	/// <param name="serializerOptions">Nordigen specific instance of <see cref="JsonSerializerOptions"/>.</param>
-	public AccountClient(HttpClient httpClient, NordigenJsonSerializerOptions serializerOptions,
+	/// <param name="logger">Logger for diagnostic details.</param>
+	public AccountClient(
+		HttpClient httpClient,
+		NordigenJsonSerializerOptions serializerOptions,
 		ILogger<AccountClient> logger)
 	{
 		_httpClient = httpClient;
@@ -67,18 +69,24 @@ public sealed class AccountClient : IAccountClient
 		_logger.LogInformation("Received transactions JSON: {Json}", jsonString);
 		await response.ThrowIfNotSuccessful().ConfigureAwait(false);
 		var transactions = JsonSerializer.Deserialize(jsonString, _context.TransactionsWrapper);
-		// if (transactions.Transactions == null && id == Guid.Parse("91c5a418-156e-451a-87f7-a30b50552aac"))
-		// 	transactions = JsonSerializer.Deserialize(ReturnTestJSON(), _context.TransactionsWrapper);
+
+		/*
+		if (transactions.Transactions == null && id == Guid.Parse("91c5a418-156e-451a-87f7-a30b50552aac"))
+			transactions = JsonSerializer.Deserialize(ReturnTestJSON(), _context.TransactionsWrapper);
+		*/
+
 		if (transactions?.Transactions == null)
 		{
 			throw new Exception("Empty transactions: error json" + jsonString);
 		}
-		
-		return transactions!.Transactions;
+
+		return transactions.Transactions;
 	}
 
+	/*
 	private string ReturnTestJSON()
 	{
 		return File.ReadAllText("/Users/robertivanc/src/robrezervacije/n26.json");
 	}
+	*/
 }
